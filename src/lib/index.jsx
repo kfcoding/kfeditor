@@ -59,10 +59,6 @@ class Kfeditor extends Component {
     console.log(value.toJSON())
   }
 
-  toggleTool = (show) => {
-    this.setState({showTool: show})
-  }
-
   render() {
     let {value} = this.state;
 
@@ -73,7 +69,6 @@ class Kfeditor extends Component {
           placeholder='请开始你的表演！'
           onChange={this.onChange}
           plugins={plugins}
-          toggleTool={this.toggleTool}
         />
       </div>
     );

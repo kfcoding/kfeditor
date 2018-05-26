@@ -48,6 +48,10 @@ export default (options) => {
       if (!change.value.texts.get(0).text) {
         change.setBlocks('toolbox');
         return;
+      } else {
+        if (change.value.blocks.get(0).type == 'toolbox') {
+          change.setBlocks('paragraph')
+        }
       }
 
       if (event.key == ' ') {
