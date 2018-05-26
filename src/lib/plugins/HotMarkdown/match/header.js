@@ -12,12 +12,8 @@ export default (
   let header;
 
   if (count === 1) header = 'h1';
-  // else if (count === 2) header = options.HEADING_2;
-  // else if (count === 3) header = options.HEADING_3;
-  // else if (count === 4) header = options.HEADING_4;
-  // else if (count === 5) header = options.HEADING_5;
-  // else if (count === 6) header = options.HEADING_6;
-  else return;
+  else if (count === 2) header = 'h2';
+  else if (count === 3) header = 'h3';
 
   return change.setBlocks(header).deleteAtRange(
     Range.create({

@@ -44,5 +44,7 @@
     "type": "git",
     "url": ""
   },
-  "dependencies": {}
+  "dependencies": {
+    "styled-components": "^3.3.0"
+  }
 }

@@ -3,6 +3,10 @@ import { Editor } from 'slate-react';
 import {Value} from 'slate';
 import HotMarkdown from './plugins/HotMarkdown';
 import H1 from './plugins/Headers/H1';
+import H2 from './plugins/Headers/H2';
+import H3 from './plugins/Headers/H3';
+import Blockquote from './plugins/Blockquote/Blockquote';
+import CodeBlock from './plugins/CodeBlock/CodeBlock';
 
 
 const initialValue = Value.fromJSON({
@@ -26,9 +30,23 @@ const initialValue = Value.fromJSON({
   },
 });
 
+/*const options = Object.assign(
+  {
+    markdownOption: {
+      blocks: Object.assign(BLOCKS, opt.blocks),
+      marks: Object.assign(MARKS, opt.marks),
+      inlines: Object.assign(INLINES, opt.inlines)
+    },
+  }
+)*/
+
 const plugins = [
   HotMarkdown(),
-  H1()
+  H1(),
+  H2(),
+  H3(),
+  Blockquote(),
+  CodeBlock()
 ];
 
 class Kfeditor extends Component {
