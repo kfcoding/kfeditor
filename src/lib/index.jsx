@@ -7,21 +7,20 @@ import H2 from './plugins/Headers/H2';
 import H3 from './plugins/Headers/H3';
 import Blockquote from './plugins/Blockquote/Blockquote';
 import CodeBlock from './plugins/CodeBlock/CodeBlock';
-
+import Tool from './tool';
+import Toolbox from './plugins/Toolbox';
 
 const initialValue = Value.fromJSON({
   document: {
     nodes: [
       {
         object: 'block',
-        type: 'paragraph',
+        type: 'toolbox',
         nodes: [
           {
             object: 'text',
             leaves: [
-              {
-                text: 'A line of text in a paragraph.',
-              },
+
             ],
           },
         ],
@@ -46,7 +45,8 @@ const plugins = [
   H2(),
   H3(),
   Blockquote(),
-  CodeBlock()
+  CodeBlock(),
+  Toolbox()
 ];
 
 class Kfeditor extends Component {
@@ -59,16 +59,22 @@ class Kfeditor extends Component {
     console.log(value.toJSON())
   }
 
+  toggleTool = (show) => {
+    this.setState({showTool: show})
+  }
+
   render() {
     let {value} = this.state;
+
     return (
-      <div style={{padding: '40px'}}>
+      <div style={{padding: '40px', position: 'relative'}}>
         <Editor
           value={value}
+          placeholder='请开始你的表演！'
           onChange={this.onChange}
           plugins={plugins}
+          toggleTool={this.toggleTool}
         />
-
       </div>
     );
   }

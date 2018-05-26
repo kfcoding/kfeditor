@@ -1,7 +1,10 @@
+import React from 'react';
+import { render } from "react-dom";
 import {Change} from 'slate';
 import MatchHeader from './match/header';
 import MatchBlockQuote from './match/blockqoute';
 import MatchCodeBlock from './match/codeBlock';
+import { findDOMNode } from 'slate-react';
 
 const CheckPatterns = (options, change) => {
   console.log(options);
@@ -33,6 +36,7 @@ export default (options) => {
     )
   };
   console.log(options);
+
   return {
     onKeyDown: (event, change, editor) => {
       /*switch (event.key) {
@@ -41,9 +45,16 @@ export default (options) => {
       }*/
     },
     onKeyUp: (event, change, editor) => {
+      if (!change.value.texts.get(0).text) {
+        change.setBlocks('toolbox');
+        return;
+      }
+
       if (event.key == ' ') {
 
         return CheckPatterns(options, change)
+      } else if (event.key == 'Enter') {
+        change.setBlocks('paragraph')
       }
     }
   };
