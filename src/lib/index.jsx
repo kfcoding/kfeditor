@@ -9,6 +9,7 @@ import Toolbox from './plugins/Toolbox';
 import AutoReplace from 'slate-auto-replace'
 import DropOrPasteImages from 'slate-drop-or-paste-images'
 import Image from './nodes/Image';
+import EditBlockquote from 'slate-edit-blockquote'
 
 const initialValue = Value.fromJSON({
   document: {
@@ -42,6 +43,7 @@ const initialValue = Value.fromJSON({
 const plugins = [
   CodeBlock(),
   Toolbox(),
+  EditBlockquote(),
   AutoReplace({
     trigger: 'space',
     before: /^(#{1,6})$/,
@@ -82,7 +84,8 @@ const plugins = [
         data: { file },
       })
     }
-  })
+  }),
+
 ];
 
 function renderNode(props) {
@@ -95,7 +98,7 @@ function renderNode(props) {
         borderLeft: '0.25em solid #dfe2e5',
         marginLeft: 0
       };
-      return <blockquote {...attributes} style={style}><p>{children}</p></blockquote>
+      return <blockquote {...attributes} style={style}>{children}</blockquote>
     case 'hr':
       return <hr />
     case 'ul':
