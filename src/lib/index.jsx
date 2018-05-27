@@ -7,6 +7,8 @@ import H3 from './plugins/Headers/H3';
 import CodeBlock from './plugins/CodeBlock/CodeBlock';
 import Toolbox from './plugins/Toolbox';
 import AutoReplace from 'slate-auto-replace'
+import DropOrPasteImages from 'slate-drop-or-paste-images'
+import Image from './nodes/Image';
 
 const initialValue = Value.fromJSON({
   document: {
@@ -72,6 +74,15 @@ const plugins = [
     before: /^(-)$/,
     transform: transform => transform.setBlock('li').wrapBlock('ul')
   }),
+  DropOrPasteImages({
+    insertImage: (transform, file) => {
+      return transform.insertBlock({
+        type: 'image',
+        isVoid: true,
+        data: { file },
+      })
+    }
+  })
 ];
 
 function renderNode(props) {
@@ -95,6 +106,8 @@ function renderNode(props) {
       const level = node.data.get('level')
       const Tag = `h${level}`
       return <Tag {...attributes}>{children}</Tag>
+    case 'image':
+      return <Image {...props} />
   }
 }
 
