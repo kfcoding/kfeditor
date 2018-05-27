@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from "react-dom";
-import {Change} from 'slate';
+import {Change, Range} from 'slate';
 import MatchHeader from './match/header';
 import MatchBlockQuote from './match/blockqoute';
 import MatchCodeBlock from './match/codeBlock';
@@ -18,12 +18,26 @@ const CheckPatterns = (options, change) => {
     return MatchHeader(options, currentTextNode, matched, change);
   } else if ((matched = currentLineText.match(/^>\s/m))) {
     return MatchBlockQuote(currentTextNode, matched, change);
+  } else if ((matched = currentLineText.match(/((?:^\s*)(?:[*+-]\s))/m))) {
+    change.setBlocks('list_item')
+    const matchedLength = matched[0].length;
+    const newChange = change.deleteAtRange(
+      Range.create({
+        anchorKey: currentTextNode.key,
+        focusKey: currentTextNode.key,
+        anchorOffset: matched.index,
+        focusOffset: matched.index + matchedLength
+      })
+    );
+
+    return true
   }
   /*else if((matched = currentLineText.match(/^(?: {4}|\t)/m))){ // [Code Block] Prefixed by 4 spaces or 1 tab
      return MatchCodeBlock(options.codeOption, currentTextNode, matched, change);
    } else if ((matched = currentLineText.match(/^\s*```(\w+)?\s/m))) {  // [Code block]  ```lang
      return MatchCodeBlock(options.codeOption, currentTextNode, matched, change, matched[1]);
    }*/
+
 }
 
 export default (options) => {
