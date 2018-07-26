@@ -1,15 +1,59 @@
 import React from "react";
 import { render } from "react-dom";
-import MyComponent from "../../lib";
 import "./styles.css";
+import Kfeditor from "../lib";
+import { Value } from 'slate';
 
-function Demo() {
-  return (
-    <div>
-      <h1>Demo with examples of the component</h1>
-      <MyComponent color="brown">Wow what a button</MyComponent>
-    </div>
-  );
+const initialValue = ({
+  document: {
+    nodes: [
+      {
+        object: 'block',
+        type: 'paragraph',
+        nodes: [
+          {
+            object: 'text',
+            leaves: [{
+              text: ''
+            }],
+          },
+        ],
+      },
+    ],
+  },
+});
+
+class Demo extends React.Component {
+  state = {
+    value: Value.fromJSON(initialValue)
+  }
+
+  onChange = ({value}) => {
+    this.setState({value})
+  }
+
+  render() {
+    return (
+      <div style={{
+        width: '1000px',
+        height: '800px',
+        margin: '0 auto',
+        background: '#fff',
+        position: 'relative',
+        zIndex: 0
+      }}>
+        <Kfeditor value={this.state.value} onChange={this.onChange} codeBlockConfig={{
+          fly: (v) => {
+            let str = "";
+            v.map(itr => {
+              str += itr.props.node.text + '\n'
+            });
+            console.log(str)
+          }
+        }}/>
+      </div>
+    );
+  }
 }
 
-render(<Demo />, document.getElementById("app"));
+render(<Demo/>, document.getElementById("app"));

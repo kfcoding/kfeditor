@@ -7,16 +7,39 @@ module.exports = {
     path: path.join(__dirname, "docs"),
     filename: "bundle.js"
   },
+  resolveLoader: {
+    moduleExtensions: ["-loader"]
+  },
   module: {
     rules: [
       {
         test: /\.(js|jsx)$/,
-        use: "babel-loader",
-        exclude: /node_modules/
+        loader: "babel-loader",
+        exclude: /node_modules/,
+        options: {
+          plugins: [
+            ['import', {libraryName: "antd", style: true}]
+          ]
+        }
       },
       {
         test: /\.css$/,
         use: ["style-loader", "css-loader"]
+      },
+      {
+        test: /\.less$/,
+        use: [
+          {
+            loader: 'style'
+          },
+          {
+            loader: 'css'
+          },
+          {
+            loader: 'less',
+            options: { javascriptEnabled: true }
+          }
+        ],
       }
     ]
   },

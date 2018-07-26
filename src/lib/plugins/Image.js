@@ -1,0 +1,5 @@
+function ImagePlugin(options) {
+  return {
+
+  }
+}
