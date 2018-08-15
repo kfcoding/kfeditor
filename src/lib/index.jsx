@@ -4,6 +4,7 @@ import { Data } from 'slate';
 import EditCode from 'slate-edit-code'
 import EditPrism from 'slate-prism'
 import CodeBlock from "./nodes/CodeBlock";
+import CodeLanguageModal from "./plugins/CodeLang"
 import 'prismjs/themes/prism.css'
 import 'normalize.css';
 import './style.css';
@@ -11,6 +12,7 @@ import './style.css';
 // import AutoReplace from 'slate-auto-replace'
 import EditBlockquote from 'slate-edit-blockquote';
 import TrailingBlock from 'slate-trailing-block';
+import EditTable from 'slate-edit-table';
 import EditList from 'slate-edit-list';
 import NoEmpty from 'slate-no-empty';
 import {Menu, Dropdown, Modal, Icon, Upload} from 'antd';
@@ -24,6 +26,7 @@ const CodePlugin = EditCode({
   onlyIn: node => node.type === 'code_block'
 });
 const ListPlugin = EditList();
+const TablePlugin = EditTable();
 const plugins = [
   // MarkdownPlugin({
   //   listOption: {
@@ -66,7 +69,7 @@ function renderNode(props) {
     case 'ol_list':
       return <ol {...attributes}>{children}</ol>;
     case 'ul_list':
-      return <ul {...attributes}>{children}</ul>
+      return <ul {...attributes}>{children}</ul>;
     case 'list_item':
       return <li {...attributes}>{children}</li>;
     case 'h1':
@@ -93,7 +96,8 @@ class Kfeditor extends Component {
     showToolset: false,
     toolsetTop: 0,
     currentBlock: null,
-    visible: false
+    visible: false,
+    codeLangModalVisible: false
   };
 
   containerNode = React.createRef();
@@ -117,6 +121,18 @@ class Kfeditor extends Component {
     let crect = this.containerNode.getBoundingClientRect();
     this.sidebarIcon.style.height = rect.height + 'px';
     this.sidebarIcon.style.transform = `translateY(${rect.top - crect.top - 40}px)`;
+  }
+
+  popCodeLangModal = () => {
+    this.setState({
+      codeLangModalVisible: true
+    });
+  }
+
+  closeCodeLangModal = () => {
+    this.setState({
+      codeLangModalVisible: false
+    });
   }
 
   makeH1 = () => {
@@ -149,9 +165,10 @@ class Kfeditor extends Component {
     this.onChange(cg)
   }
 
-  makeCodeBlock = () => {
+  makeCodeBlock = (lang) => {
     let {value} = this.props;
-    let newChange = value.change().setBlocks({data: Data.create({['syntax']: 'javascript'})});
+    let newChange = value.change().setBlocks({ data: Data.create({ ['syntax']: lang }) });
+    console.log(lang);
     this.onChange(CodePlugin.changes.wrapCodeBlock(newChange).focus());
   }
 
@@ -178,6 +195,7 @@ class Kfeditor extends Component {
       visible: false,
     });
   }
+
   handleCancel = (e) => {
     console.log(e);
     this.setState({
@@ -235,7 +253,7 @@ class Kfeditor extends Component {
         <Menu.Item onClick={this.makeOl}>
           <i className='iconfont'>&#xe76b;</i> 有序列表
         </Menu.Item>
-        <Menu.Item onClick={this.makeCodeBlock}>
+        <Menu.Item onClick={this.popCodeLangModal}>
           <i className='iconfont'>&#xeb9f;</i> 代码块
         </Menu.Item>
         <Menu.Item onClick={this.makeQuote}>
@@ -258,6 +276,7 @@ class Kfeditor extends Component {
             </Dropdown>
           </div>
         </div>
+
         <Editor
           value={value}
           onChange={this.props.onChange}
@@ -266,6 +285,12 @@ class Kfeditor extends Component {
           renderNode={renderNode}
           className='markdown-body'
           {...rest}
+        />
+
+        <CodeLanguageModal
+          visible = {this.state.codeLangModalVisible}
+          close = { () => this.closeCodeLangModal()}
+          make = { (lang) => this.makeCodeBlock(lang)}
         />
 
         <Modal
