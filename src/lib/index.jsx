@@ -17,6 +17,7 @@ import EditList from 'slate-edit-list';
 import NoEmpty from 'slate-no-empty';
 import {Menu, Dropdown, Modal, Icon, Upload} from 'antd';
 import Blockquote from "./nodes/Blockquote";
+import HoverMenu from "./plugins/HoverMenu";
 
 const SubMenu = Menu.SubMenu;
 const Dragger = Upload.Dragger;
@@ -90,7 +91,30 @@ function renderNode(props) {
   }
 }
 
+function renderMark(props) {
+  const { children, mark, attributes } = props
+
+  switch (mark.type) {
+    case 'bold':
+      return <strong {...attributes}>{children}</strong>
+    case 'code':
+      return <code className='inlineCode' {...attributes}>{children}</code>
+    case 'italic':
+      return <em {...attributes}>{children}</em>
+    case 'underlined':
+      return <u {...attributes}>{children}</u>
+  }
+}
+
 class Kfeditor extends Component {
+
+  constructor(props) {
+    super(props);
+    this.containerNode = React.createRef();
+    this.sidebarIcon = React.createRef();
+    this.menu = React.createRef();
+  }
+
   state = {
     value: this.props.value,
     showToolset: false,
@@ -99,10 +123,6 @@ class Kfeditor extends Component {
     visible: false,
     codeLangModalVisible: false
   };
-
-  containerNode = React.createRef();
-
-  sidebarIcon = React.createRef();
 
   onChange = ({value}) => {
     this.props.onChange({value});
@@ -121,6 +141,20 @@ class Kfeditor extends Component {
     let crect = this.containerNode.getBoundingClientRect();
     this.sidebarIcon.style.height = rect.height + 'px';
     this.sidebarIcon.style.transform = `translateY(${rect.top - crect.top - 40}px)`;
+
+    if (!this.menu) return
+    if (value.isBlurred || value.isEmpty) {
+      this.menu.removeAttribute('style');
+      return
+    }
+    this.menu.style.opacity = 1;
+    this.menu.style.top = `${rect.top + window.pageYOffset - this.menu.offsetHeight}px`;
+
+    var text_range = window.getSelection().getRangeAt(0);
+    var text_rect = text_range.getBoundingClientRect();
+    this.menu.style.left = `${text_rect.left +
+      text_rect.width / 2 - 
+      this.menu.offsetWidth / 2}px`;
   }
 
   popCodeLangModal = () => {
@@ -183,6 +217,13 @@ class Kfeditor extends Component {
     this.onChange(cg.focus());
   }
 
+  makeMark = (type) => {
+    let {value} = this.props;
+    console.log(value);
+    let cg = value.change().toggleMark(type)
+    this.onChange(cg.focus());
+  }
+
   insertImage = () => {
     this.setState({
       visible: true,
@@ -239,29 +280,29 @@ class Kfeditor extends Component {
     const content = (
       <Menu style={{fontSize: '12px'}} className='sidebarMenu'>
         <Menu.Item onClick={this.makeH1}>
-          <i className="iconfont">&#xe75b;</i> 一级标题
+          <i className="iconfont">&#xe9fc;</i> 一级标题
         </Menu.Item>
         <Menu.Item onClick={this.makeH2}>
-          <i className='iconfont'>&#xe75c;</i> 二级标题
+          <i className='iconfont'>&#xe9fd;</i> 二级标题
         </Menu.Item>
         <Menu.Item onClick={this.makeH3}>
-          <i className='iconfont'>&#xe862;</i> 三级标题
+          <i className='iconfont'>&#xe9fb;</i> 三级标题
         </Menu.Item>
         <Menu.Item onClick={this.makeUl}>
-          <i className='iconfont'>&#xe695;</i> 无序列表
+          <i className='iconfont'>&#xe97a;</i> 无序列表
         </Menu.Item>
         <Menu.Item onClick={this.makeOl}>
-          <i className='iconfont'>&#xe76b;</i> 有序列表
+          <i className='iconfont'>&#xe93c;</i> 有序列表
         </Menu.Item>
         <Menu.Item onClick={this.popCodeLangModal}>
-          <i className='iconfont'>&#xeb9f;</i> 代码块
+          <i className='iconfont'>&#xe743;</i> 代码块
         </Menu.Item>
         <Menu.Item onClick={this.makeQuote}>
-          <i className='iconfont'>&#xe6b2;</i> 引用
+          <i className='iconfont'>&#xe600;</i> 引用
         </Menu.Item>
         <Menu.Divider></Menu.Divider>
         <Menu.Item onClick={this.insertImage}>
-          <i className='iconfont'>&#xe7bc;</i> 图片
+          <i className='iconfont'>&#xe993;</i> 图片
         </Menu.Item>
       </Menu>
     );
@@ -272,9 +313,18 @@ class Kfeditor extends Component {
         <div style={{flex: '0 0 40px', position: 'relative'}}>
           <div ref={ node => this.sidebarIcon = node} style={styles}>
             <Dropdown overlay={content} trigger={['click']}>
-              <i className='iconfont' style={{fontSize: '16px'}}>&#xe774;</i>
+              <i className='iconfont' style={{ fontSize: '16px' }}>&#xe607;</i>
             </Dropdown>
           </div>
+        </div>
+
+        <div>
+          <HoverMenu
+            innerRef={menu => (this.menu = menu)}
+            value={this.state.value}
+            onChange={this.onChange}
+            make = { (type) => this.makeMark(type)}
+          />
         </div>
 
         <Editor
@@ -283,6 +333,7 @@ class Kfeditor extends Component {
           plugins={plugins}
           style={{zIndex: 0, height: '100%', flex: '1 0 0'}}
           renderNode={renderNode}
+          renderMark={renderMark}
           className='markdown-body'
           {...rest}
         />

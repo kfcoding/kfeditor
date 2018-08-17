@@ -1,7 +1,6 @@
 import React from 'react';
 import { Modal, Button, Form, Select } from 'antd';
 import { languages } from 'prismjs/components.json';
-import { Node } from 'slate';
 
 class LangForm extends React.Component {
 
@@ -65,13 +64,9 @@ class CodeLanguageModal extends React.Component {
   
   componentWillReceiveProps(nextProps) {
 
-    console.log('componentWillReceiveProps');
-
     this.setState({
       visible: nextProps.visible,
     })
-
-    console.log(nextProps.codeLangModalVisible)
   }
 
   formRef = (ref) => {

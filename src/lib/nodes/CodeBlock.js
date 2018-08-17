@@ -27,7 +27,7 @@ class CodeBlock extends React.Component {
           }
           <div contentEditable={false} style={{ position: 'absolute', top: 0, right: 5, opacity: '.5' }}>
             <i className='iconfont' style={{ cursor: 'pointer' }} onClick={this.props.editor.props.codeBlockConfig.fly.bind(this, this.props.children)}>
-              &#xe74c;
+              &#xe646;
             </i>
             {this.props.node.data.get('syntax')}
           </div>
