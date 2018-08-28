@@ -24,11 +24,11 @@ class LangForm extends React.Component {
     return (
       <Form horizontal="true">
         <FormItem
-          label="Code language"
+          label="代码语言"
           hasFeedback
         >
           {getFieldDecorator('lang')(
-            <Select placeholder="Select a language (optional)" onChange={this.handleChange}>
+            <Select placeholder="请选择代码语言" onChange={this.handleChange}>
               {Object.keys(languages)
                 .filter(lang => {
                   return languages[lang].title;
@@ -58,7 +58,7 @@ class CodeLanguageModal extends React.Component {
 
     this.state = {
       visible: this.props.codeLangModalVisible,
-      title: 'Create code block'
+      title: '创建代码块'
     };
   }
   
