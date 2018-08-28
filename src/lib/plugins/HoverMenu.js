@@ -3,8 +3,6 @@ import styled from 'react-emotion';
 import ReactDOM from 'react-dom';
 import '../style.css';
 
-// To do : 这里的 prps.resorved 应该就是是否已经高亮的地方，需要看一下为什么没有正常工作
-
 const Button = styled('span')`
   cursor: pointer;
   color: ${props =>
@@ -40,7 +38,7 @@ const Menu = styled('div')`
   }
 `
 
-export const Toolbar = styled(Menu)`
+const Toolbar = styled(Menu)`
   position: relative;
   padding: 1px 18px 17px;
   margin: 0 -20px;
@@ -65,7 +63,6 @@ class HoverMenu extends React.Component {
 
   render() {
     const { className, innerRef } = this.props
-    const app = window.document.getElementById('app')
 
     return ReactDOM.createPortal(
       <StyledMenu className={className} innerRef={innerRef}>
@@ -74,16 +71,14 @@ class HoverMenu extends React.Component {
         {this.renderMarkButton('underlined', 'underlined')}
         {this.renderMarkButton('code', 'code')}
       </StyledMenu>,
-      app
+      this.props.editorAnchor
     )
   }
 
-  //To Do : 看看这里到底为啥导致值没有正常传入
   renderMarkButton(type, icon) {
     const { value } = this.props
 
     const isActive = value.activeMarks.some(mark => mark.type == type)
-    console.log(isActive);
     return (
       <Button
         reversed

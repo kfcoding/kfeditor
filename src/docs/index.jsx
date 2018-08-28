@@ -23,6 +23,8 @@ const initialValue = ({
   },
 });
 
+const app = document.getElementById("app");
+
 class Demo extends React.Component {
   state = {
     value: Value.fromJSON(initialValue)
@@ -42,7 +44,7 @@ class Demo extends React.Component {
         position: 'relative',
         zIndex: 0
       }}>
-        <Kfeditor value={this.state.value} onChange={this.onChange} codeBlockConfig={{
+        <Kfeditor editorAnchor = {app} value={this.state.value} onChange={this.onChange} codeBlockConfig={{
           fly: (v) => {
             let str = "";
             v.map(itr => {
@@ -56,4 +58,4 @@ class Demo extends React.Component {
   }
 }
 
-render(<Demo/>, document.getElementById("app"));
+render(<Demo/>, app);

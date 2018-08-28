@@ -1,40 +1,53 @@
 import React, { Component } from "react";
 import { Editor, findDOMNode } from 'slate-react';
-import { Data } from 'slate';
-import EditCode from 'slate-edit-code'
-import EditPrism from 'slate-prism'
-import CodeBlock from "./nodes/CodeBlock";
-import CodeLanguageModal from "./plugins/CodeLang"
 import 'prismjs/themes/prism.css'
 import 'normalize.css';
 import './style.css';
-// import {MarkdownPlugin} from 'slate-md-editor';
-// import AutoReplace from 'slate-auto-replace'
+
+// --------------------------- slate ---------------------------
+import { Data } from 'slate';
+import EditCode from 'slate-edit-code'
+import EditPrism from 'slate-prism'
 import EditBlockquote from 'slate-edit-blockquote';
 import TrailingBlock from 'slate-trailing-block';
 import EditTable from 'slate-edit-table';
 import EditList from 'slate-edit-list';
 import NoEmpty from 'slate-no-empty';
-import {Menu, Dropdown, Modal, Icon, Upload} from 'antd';
+// import {MarkdownPlugin} from 'slate-md-editor';
+// import AutoReplace from 'slate-auto-replace'
+
+// --------------------------- nodes ---------------------------
+import CodeBlock from './nodes/CodeBlock';
+import { Table, TableRow, TableCell } from './nodes/Table';
+import Paragraph from './nodes/Paragraph';
 import Blockquote from "./nodes/Blockquote";
+
+// --------------------------- plugins ---------------------------
+import CodeLanguageModal from "./plugins/CodeLang"
 import HoverMenu from "./plugins/HoverMenu";
+import ImageModal from './plugins/Image';
 
-const SubMenu = Menu.SubMenu;
-const Dragger = Upload.Dragger;
+// --------------------------- antd ---------------------------
+import { Menu, Dropdown} from 'antd';
 
+// ================================ PLUGINS ==================================
 const QuotePlugin = EditBlockquote();
+const ListPlugin = EditList();
 const CodePlugin = EditCode({
   onlyIn: node => node.type === 'code_block'
 });
-const ListPlugin = EditList();
-const TablePlugin = EditTable();
+const TablePlugin = EditTable({
+  typeTable: 'table',
+  typeRow: 'table_row',
+  typeCell: 'table_cell',
+  typeContent: 'paragraph'
+});
 const plugins = [
   // MarkdownPlugin({
   //   listOption: {
   //     types: ['ol_list', 'ul_list']
   //   }
   // }),
-  NoEmpty('paragraph'),
   // AutoReplace({
   //   trigger: 'space',
   //   before: /^(```)(.*)$/,
@@ -49,11 +62,15 @@ const plugins = [
     onlyIn: node => node.type === 'code_block',
     getSyntax: node => node.data.get('syntax')
   }),
+  NoEmpty('paragraph'),
   CodePlugin,
   TrailingBlock(),
   ListPlugin,
-  QuotePlugin
+  QuotePlugin,
+  TablePlugin
 ]
+
+// ================================ RENDER ==================================
 
 function renderNode(props) {
   const {node, children, attributes} = props;
@@ -66,7 +83,7 @@ function renderNode(props) {
     case 'code_line':
       return <div className='codeLine' {...attributes} style={{margin: '0'}}>{children}</div>;
     case 'paragraph':
-      return <p {...attributes}>{children}</p>;
+      return <Paragraph {...props} />;
     case 'ol_list':
       return <ol {...attributes}>{children}</ol>;
     case 'ul_list':
@@ -86,6 +103,12 @@ function renderNode(props) {
       return <img {...attributes} src={node.data.get('src')}/>;
     case 'blockquote':
       return <Blockquote {...props}>{children}</Blockquote>
+    case 'table':
+      return <Table {...props} >{children}</Table>;
+    case 'table_row':
+      return <TableRow {...props} >{children}</TableRow>;
+    case 'table_cell':
+      return <TableCell {...props} >{children}</TableCell>;
     default:
       return null;
   }
@@ -106,6 +129,8 @@ function renderMark(props) {
   }
 }
 
+// ============================ EDITOR ================================
+
 class Kfeditor extends Component {
 
   constructor(props) {
@@ -113,6 +138,7 @@ class Kfeditor extends Component {
     this.containerNode = React.createRef();
     this.sidebarIcon = React.createRef();
     this.menu = React.createRef();
+    this.editor = React.createRef();
   }
 
   state = {
@@ -121,7 +147,8 @@ class Kfeditor extends Component {
     toolsetTop: 0,
     currentBlock: null,
     visible: false,
-    codeLangModalVisible: false
+    codeLangModalVisible: false,
+    imageModalVisible: false
   };
 
   onChange = ({value}) => {
@@ -130,7 +157,6 @@ class Kfeditor extends Component {
 
     this.setState({value});
     this.props.onContentChange ? this.props.onContentChange({value}) : null;
-    console.log(value.toJSON())
   }
 
   componentDidUpdate() {
@@ -166,6 +192,18 @@ class Kfeditor extends Component {
   closeCodeLangModal = () => {
     this.setState({
       codeLangModalVisible: false
+    });
+  }
+
+  popImageModal = () => {
+    this.setState({
+      imageModalVisible: true
+    });
+  }
+
+  closeImageModal = () => {
+    this.setState({
+      imageModalVisible: false
     });
   }
 
@@ -219,30 +257,31 @@ class Kfeditor extends Component {
 
   makeMark = (type) => {
     let {value} = this.props;
-    console.log(value);
     let cg = value.change().toggleMark(type)
     this.onChange(cg.focus());
   }
 
-  insertImage = () => {
-    this.setState({
-      visible: true,
-    });
+  makeTable = () => {
+    this.editor.change(TablePlugin.changes.insertTable);
   }
 
-  handleOk = (e) => {
-    console.log(e);
-    this.setState({
-      visible: false,
-    });
-  }
+  // insertImage = () => {
+  //   this.setState({
+  //     visible: true,
+  //   });
+  // }
 
-  handleCancel = (e) => {
-    console.log(e);
-    this.setState({
-      visible: false,
-    });
-  }
+  // handleOk = (e) => {
+  //   this.setState({
+  //     visible: false,
+  //   });
+  // }
+
+  // handleCancel = (e) => {
+  //   this.setState({
+  //     visible: false,
+  //   });
+  // }
 
   imageChange = (file) => {
     console.log(file)
@@ -300,15 +339,18 @@ class Kfeditor extends Component {
         <Menu.Item onClick={this.makeQuote}>
           <i className='iconfont'>&#xe600;</i> 引用
         </Menu.Item>
+        <Menu.Item onClick={this.makeTable}>
+          <i className='iconfont'>&#xe621;</i> 表格
+        </Menu.Item>
         <Menu.Divider></Menu.Divider>
-        <Menu.Item onClick={this.insertImage}>
+        <Menu.Item onClick={this.popImageModal}>
           <i className='iconfont'>&#xe993;</i> 图片
         </Menu.Item>
       </Menu>
     );
 
     return (
-      <div ref={node => this.containerNode = node} style={{padding: '40px 40px 0 0px', position: 'relative', display: 'flex', minHeight: 500}}>
+      <div id="editorWrapper" ref={node => this.containerNode = node} style={{padding: '40px 40px 0 0px', position: 'relative', display: 'flex', minHeight: 500}}>
 
         <div style={{flex: '0 0 40px', position: 'relative'}}>
           <div ref={ node => this.sidebarIcon = node} style={styles}>
@@ -324,10 +366,12 @@ class Kfeditor extends Component {
             value={this.state.value}
             onChange={this.onChange}
             make = { (type) => this.makeMark(type)}
+            editorAnchor={this.props.editorAnchor}
           />
         </div>
 
         <Editor
+          ref={editor => this.editor = editor}
           value={value}
           onChange={this.props.onChange}
           plugins={plugins}
@@ -344,7 +388,14 @@ class Kfeditor extends Component {
           make = { (lang) => this.makeCodeBlock(lang)}
         />
 
-        <Modal
+        <ImageModal
+          visible = {this.state.imageModalVisible}
+          close = { () => this.closeImageModal()}
+          imageOptions = {this.props.imageOptions}
+          imageChange = { (file) => this.imageChange(file)}
+        />
+
+        {/* <Modal
           title="插入图片"
           visible={this.state.visible}
           onOk={this.handleOk}
@@ -356,7 +407,7 @@ class Kfeditor extends Component {
             </p>
             <p className="ant-upload-text">点击或拖拽图片到这里上传</p>
           </Dragger>
-        </Modal>
+        </Modal> */}
       </div>
     );
   }
