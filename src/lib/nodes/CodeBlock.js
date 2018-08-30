@@ -1,4 +1,7 @@
 import React from 'react';
+import { Modal, Button, Form, Select } from 'antd';
+import { languages } from 'prismjs/components.json';
+import { Node } from 'slate';
 
 const style = {
   background: '#f7f7f7',
@@ -11,17 +14,25 @@ const style = {
 };
 
 class CodeBlock extends React.Component {
+
   render() {
     return (
-      <pre {...this.props.attributes} style={style}>
-        {this.props.children}
-        {this.props.editor.props.readOnly ?
-          null
-          :
-          <div style={{position: 'absolute', bottom: 0, right: 5, opacity: '.5'}}>按CMD/CTRL+ENTER退出编辑</div>
-        }
-        <div contentEditable={false} style={{position: 'absolute', top: 0, right: 5, opacity: '.5'}}><i className='iconfont' style={{cursor: 'pointer'}} onClick={this.props.editor.props.codeBlockConfig.fly.bind(this, this.props.children)}>&#xe74c;</i></div>
-      </pre>
+      <div>
+        <pre {...this.props.attributes} style={style}>
+          {this.props.children}
+          {this.props.editor.props.readOnly ?
+            null
+            :
+            <div style={{ position: 'absolute', bottom: 0, right: 5, opacity: '.5' }}>按CMD/CTRL+ENTER退出编辑</div>
+          }
+          <div contentEditable={false} style={{ position: 'absolute', top: 0, right: 5, opacity: '.5' }}>
+            <i className='iconfont' style={{ cursor: 'pointer' }} onClick={this.props.editor.props.codeBlockConfig.fly.bind(this, this.props.children)}>
+              &#xe646;
+            </i>
+            {this.props.node.data.get('syntax')}
+          </div>
+        </pre>
+      </div>
     )
   }
 }

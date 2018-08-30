@@ -1,36 +1,53 @@
 import React, { Component } from "react";
 import { Editor, findDOMNode } from 'slate-react';
-import { Data } from 'slate';
-import EditCode from 'slate-edit-code'
-import EditPrism from 'slate-prism'
-import CodeBlock from "./nodes/CodeBlock";
 import 'prismjs/themes/prism.css'
 import 'normalize.css';
 import './style.css';
-// import {MarkdownPlugin} from 'slate-md-editor';
-// import AutoReplace from 'slate-auto-replace'
+
+// --------------------------- slate ---------------------------
+import { Data } from 'slate';
+import EditCode from 'slate-edit-code'
+import EditPrism from 'slate-prism'
 import EditBlockquote from 'slate-edit-blockquote';
 import TrailingBlock from 'slate-trailing-block';
+import EditTable from 'slate-edit-table';
 import EditList from 'slate-edit-list';
 import NoEmpty from 'slate-no-empty';
-import {Menu, Dropdown, Modal, Icon, Upload} from 'antd';
+// import {MarkdownPlugin} from 'slate-md-editor';
+// import AutoReplace from 'slate-auto-replace'
+
+// --------------------------- nodes ---------------------------
+import CodeBlock from './nodes/CodeBlock';
+import { Table, TableRow, TableCell } from './nodes/Table';
+import Paragraph from './nodes/Paragraph';
 import Blockquote from "./nodes/Blockquote";
 
-const SubMenu = Menu.SubMenu;
-const Dragger = Upload.Dragger;
+// --------------------------- plugins ---------------------------
+import CodeLanguageModal from "./plugins/CodeLang"
+import HoverMenu from "./plugins/HoverMenu";
+import ImageModal from './plugins/Image';
 
+// --------------------------- antd ---------------------------
+import { Menu, Dropdown} from 'antd';
+
+// ================================ PLUGINS ==================================
 const QuotePlugin = EditBlockquote();
+const ListPlugin = EditList();
 const CodePlugin = EditCode({
   onlyIn: node => node.type === 'code_block'
 });
-const ListPlugin = EditList();
+const TablePlugin = EditTable({
+  typeTable: 'table',
+  typeRow: 'table_row',
+  typeCell: 'table_cell',
+  typeContent: 'paragraph'
+});
 const plugins = [
   // MarkdownPlugin({
   //   listOption: {
   //     types: ['ol_list', 'ul_list']
   //   }
   // }),
-  NoEmpty('paragraph'),
   // AutoReplace({
   //   trigger: 'space',
   //   before: /^(```)(.*)$/,
@@ -45,11 +62,15 @@ const plugins = [
     onlyIn: node => node.type === 'code_block',
     getSyntax: node => node.data.get('syntax')
   }),
+  NoEmpty('paragraph'),
   CodePlugin,
   TrailingBlock(),
   ListPlugin,
-  QuotePlugin
+  QuotePlugin,
+  TablePlugin
 ]
+
+// ================================ RENDER ==================================
 
 function renderNode(props) {
   const {node, children, attributes} = props;
@@ -62,11 +83,11 @@ function renderNode(props) {
     case 'code_line':
       return <div className='codeLine' {...attributes} style={{margin: '0'}}>{children}</div>;
     case 'paragraph':
-      return <p {...attributes}>{children}</p>;
+      return <Paragraph {...props} />;
     case 'ol_list':
       return <ol {...attributes}>{children}</ol>;
     case 'ul_list':
-      return <ul {...attributes}>{children}</ul>
+      return <ul {...attributes}>{children}</ul>;
     case 'list_item':
       return <li {...attributes}>{children}</li>;
     case 'h1':
@@ -82,23 +103,53 @@ function renderNode(props) {
       return <img {...attributes} src={node.data.get('src')}/>;
     case 'blockquote':
       return <Blockquote {...props}>{children}</Blockquote>
+    case 'table':
+      return <Table {...props} >{children}</Table>;
+    case 'table_row':
+      return <TableRow {...props} >{children}</TableRow>;
+    case 'table_cell':
+      return <TableCell {...props} >{children}</TableCell>;
     default:
       return null;
   }
 }
 
+function renderMark(props) {
+  const { children, mark, attributes } = props
+
+  switch (mark.type) {
+    case 'bold':
+      return <strong {...attributes}>{children}</strong>
+    case 'code':
+      return <code className='inlineCode' {...attributes}>{children}</code>
+    case 'italic':
+      return <em {...attributes}>{children}</em>
+    case 'underlined':
+      return <u {...attributes}>{children}</u>
+  }
+}
+
+// ============================ EDITOR ================================
+
 class Kfeditor extends Component {
+
+  constructor(props) {
+    super(props);
+    this.containerNode = React.createRef();
+    this.sidebarIcon = React.createRef();
+    this.menu = React.createRef();
+    this.editor = React.createRef();
+  }
+
   state = {
     value: this.props.value,
     showToolset: false,
     toolsetTop: 0,
     currentBlock: null,
-    visible: false
+    visible: false,
+    codeLangModalVisible: false,
+    imageModalVisible: false
   };
-
-  containerNode = React.createRef();
-
-  sidebarIcon = React.createRef();
 
   onChange = ({value}) => {
     this.props.onChange({value});
@@ -106,7 +157,6 @@ class Kfeditor extends Component {
 
     this.setState({value});
     this.props.onContentChange ? this.props.onContentChange({value}) : null;
-    console.log(value.toJSON())
   }
 
   componentDidUpdate() {
@@ -117,6 +167,44 @@ class Kfeditor extends Component {
     let crect = this.containerNode.getBoundingClientRect();
     this.sidebarIcon.style.height = rect.height + 'px';
     this.sidebarIcon.style.transform = `translateY(${rect.top - crect.top - 40}px)`;
+
+    if (!this.menu) return
+    if (value.isBlurred || value.isEmpty) {
+      this.menu.removeAttribute('style');
+      return
+    }
+    this.menu.style.opacity = 1;
+    this.menu.style.top = `${rect.top + window.pageYOffset - this.menu.offsetHeight}px`;
+
+    var text_range = window.getSelection().getRangeAt(0);
+    var text_rect = text_range.getBoundingClientRect();
+    this.menu.style.left = `${text_rect.left +
+      text_rect.width / 2 - 
+      this.menu.offsetWidth / 2}px`;
+  }
+
+  popCodeLangModal = () => {
+    this.setState({
+      codeLangModalVisible: true
+    });
+  }
+
+  closeCodeLangModal = () => {
+    this.setState({
+      codeLangModalVisible: false
+    });
+  }
+
+  popImageModal = () => {
+    this.setState({
+      imageModalVisible: true
+    });
+  }
+
+  closeImageModal = () => {
+    this.setState({
+      imageModalVisible: false
+    });
   }
 
   makeH1 = () => {
@@ -149,9 +237,10 @@ class Kfeditor extends Component {
     this.onChange(cg)
   }
 
-  makeCodeBlock = () => {
+  makeCodeBlock = (lang) => {
     let {value} = this.props;
-    let newChange = value.change().setBlocks({data: Data.create({['syntax']: 'javascript'})});
+    let newChange = value.change().setBlocks({ data: Data.create({ ['syntax']: lang }) });
+    console.log(lang);
     this.onChange(CodePlugin.changes.wrapCodeBlock(newChange).focus());
   }
 
@@ -166,23 +255,14 @@ class Kfeditor extends Component {
     this.onChange(cg.focus());
   }
 
-  insertImage = () => {
-    this.setState({
-      visible: true,
-    });
+  makeMark = (type) => {
+    let {value} = this.props;
+    let cg = value.change().toggleMark(type)
+    this.onChange(cg.focus());
   }
 
-  handleOk = (e) => {
-    console.log(e);
-    this.setState({
-      visible: false,
-    });
-  }
-  handleCancel = (e) => {
-    console.log(e);
-    this.setState({
-      visible: false,
-    });
+  makeTable = () => {
+    this.editor.change(TablePlugin.changes.insertTable);
   }
 
   imageChange = (file) => {
@@ -221,66 +301,81 @@ class Kfeditor extends Component {
     const content = (
       <Menu style={{fontSize: '12px'}} className='sidebarMenu'>
         <Menu.Item onClick={this.makeH1}>
-          <i className="iconfont">&#xe75b;</i> 一级标题
+          <i className="iconfont">&#xe9fc;</i> 一级标题
         </Menu.Item>
         <Menu.Item onClick={this.makeH2}>
-          <i className='iconfont'>&#xe75c;</i> 二级标题
+          <i className='iconfont'>&#xe9fd;</i> 二级标题
         </Menu.Item>
         <Menu.Item onClick={this.makeH3}>
-          <i className='iconfont'>&#xe862;</i> 三级标题
+          <i className='iconfont'>&#xe9fb;</i> 三级标题
         </Menu.Item>
         <Menu.Item onClick={this.makeUl}>
-          <i className='iconfont'>&#xe695;</i> 无序列表
+          <i className='iconfont'>&#xe97a;</i> 无序列表
         </Menu.Item>
         <Menu.Item onClick={this.makeOl}>
-          <i className='iconfont'>&#xe76b;</i> 有序列表
+          <i className='iconfont'>&#xe93c;</i> 有序列表
         </Menu.Item>
-        <Menu.Item onClick={this.makeCodeBlock}>
-          <i className='iconfont'>&#xeb9f;</i> 代码块
+        <Menu.Item onClick={this.popCodeLangModal}>
+          <i className='iconfont'>&#xe743;</i> 代码块
         </Menu.Item>
         <Menu.Item onClick={this.makeQuote}>
-          <i className='iconfont'>&#xe6b2;</i> 引用
+          <i className='iconfont'>&#xe600;</i> 引用
+        </Menu.Item>
+        <Menu.Item onClick={this.makeTable}>
+          <i className='iconfont'>&#xe621;</i> 表格
         </Menu.Item>
         <Menu.Divider></Menu.Divider>
-        <Menu.Item onClick={this.insertImage}>
-          <i className='iconfont'>&#xe7bc;</i> 图片
+        <Menu.Item onClick={this.popImageModal}>
+          <i className='iconfont'>&#xe993;</i> 图片
         </Menu.Item>
       </Menu>
     );
 
     return (
-      <div ref={node => this.containerNode = node} style={{padding: '40px 40px 0 0px', position: 'relative', display: 'flex', minHeight: 500}}>
+      <div id="editorWrapper" ref={node => this.containerNode = node} style={{padding: '40px 40px 0 0px', position: 'relative', display: 'flex', minHeight: 500}}>
 
         <div style={{flex: '0 0 40px', position: 'relative'}}>
           <div ref={ node => this.sidebarIcon = node} style={styles}>
             <Dropdown overlay={content} trigger={['click']}>
-              <i className='iconfont' style={{fontSize: '16px'}}>&#xe774;</i>
+              <i className='iconfont' style={{ fontSize: '16px' }}>&#xe607;</i>
             </Dropdown>
           </div>
         </div>
+
+        <div>
+          <HoverMenu
+            innerRef={menu => (this.menu = menu)}
+            value={this.state.value}
+            onChange={this.onChange}
+            make = { (type) => this.makeMark(type)}
+            editorAnchor={this.props.editorAnchor}
+          />
+        </div>
+
         <Editor
+          ref={editor => this.editor = editor}
           value={value}
           onChange={this.props.onChange}
           plugins={plugins}
           style={{zIndex: 0, height: '100%', flex: '1 0 0'}}
           renderNode={renderNode}
+          renderMark={renderMark}
           className='markdown-body'
           {...rest}
         />
 
-        <Modal
-          title="插入图片"
-          visible={this.state.visible}
-          onOk={this.handleOk}
-          onCancel={this.handleCancel}
-        >
-          <Dragger {...this.props.imageOptions} onChange={this.imageChange} showUploadList={false}>
-            <p className="ant-upload-drag-icon">
-              <Icon type="inbox" />
-            </p>
-            <p className="ant-upload-text">点击或拖拽图片到这里上传</p>
-          </Dragger>
-        </Modal>
+        <CodeLanguageModal
+          visible = {this.state.codeLangModalVisible}
+          close = { () => this.closeCodeLangModal()}
+          make = { (lang) => this.makeCodeBlock(lang)}
+        />
+
+        <ImageModal
+          visible = {this.state.imageModalVisible}
+          close = { () => this.closeImageModal()}
+          imageOptions = {this.props.imageOptions}
+          imageChange = { (file) => this.imageChange(file)}
+        />
       </div>
     );
   }
