@@ -59,7 +59,9 @@ class Table extends React.Component {
     const isInTable = TablePlugin.utils.isSelectionInTable(value);
     return (
       <div>
-        {isInTable ?
+        {!this.props.editor.props.readOnly && !isInTable ?
+          null
+          :
           <div className='tableButton'>
             <Button.Group size={'small'}>
               <Button disabled>按CMD/CTRL+ENTER退出编辑</Button>
@@ -73,8 +75,6 @@ class Table extends React.Component {
               <Button type="danger" onClick={this.removeTable}>删除表格</Button>
             </Button.Group>
           </div>
-          :
-          null
         }
         <table>
           <tbody {...attributes}>{children}</tbody>

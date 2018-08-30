@@ -265,24 +265,6 @@ class Kfeditor extends Component {
     this.editor.change(TablePlugin.changes.insertTable);
   }
 
-  // insertImage = () => {
-  //   this.setState({
-  //     visible: true,
-  //   });
-  // }
-
-  // handleOk = (e) => {
-  //   this.setState({
-  //     visible: false,
-  //   });
-  // }
-
-  // handleCancel = (e) => {
-  //   this.setState({
-  //     visible: false,
-  //   });
-  // }
-
   imageChange = (file) => {
     console.log(file)
     if (!file.file.response) {
@@ -394,20 +376,6 @@ class Kfeditor extends Component {
           imageOptions = {this.props.imageOptions}
           imageChange = { (file) => this.imageChange(file)}
         />
-
-        {/* <Modal
-          title="插入图片"
-          visible={this.state.visible}
-          onOk={this.handleOk}
-          onCancel={this.handleCancel}
-        >
-          <Dragger {...this.props.imageOptions} onChange={this.imageChange} showUploadList={false}>
-            <p className="ant-upload-drag-icon">
-              <Icon type="inbox" />
-            </p>
-            <p className="ant-upload-text">点击或拖拽图片到这里上传</p>
-          </Dragger>
-        </Modal> */}
       </div>
     );
   }
